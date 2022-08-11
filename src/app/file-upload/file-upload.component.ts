@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {FileUploadService} from "./service/file-upload.service";
 
 @Component({
   selector: 'app-file-upload',
@@ -7,7 +8,9 @@ import { Component, OnInit } from '@angular/core';
 })
 export class FileUploadComponent implements OnInit {
   file: File | null = null;
-  constructor() { }
+
+  constructor(public fileService: FileUploadService) {
+  }
 
   ngOnInit(): void {
   }
@@ -25,11 +28,13 @@ export class FileUploadComponent implements OnInit {
       alert("Please select a file first")
     }
   }
+
   private obtenerInformacionArchivo(data: { files: File }) {
     const promesa = new Promise(async (resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = (e) => {
-        console.log(reader.result);
+        const obj = this.fileService.entidadDesdeXML(reader.result);
+        console.log(obj);
       };
       // @ts-ignore
       reader.readAsText(data);
