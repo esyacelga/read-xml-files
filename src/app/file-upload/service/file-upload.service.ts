@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 // @ts-ignore
-import * as xml2js from 'xml2js';
+import {FacturaElectronica} from "../entidad-factura/FacturaElectronica";
 
 @Injectable({
   providedIn: 'root'
@@ -11,40 +11,25 @@ export class FileUploadService {
   constructor() {
   }
 
+  public async procesaXml(data: any): Promise<any> {
+    const promesa = new Promise(async (resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = (e) => {
+        const obj = this.entidadDesdeXML(reader.result) as FacturaElectronica;
+        resolve(obj);
+      };
+      // @ts-ignore
+      reader.readAsText(data);
+    });
+    return promesa;
+  }
 
   public entidadDesdeXML = (data: any): any => {
     if (!data || data == null) {
       return null;
     }
     var newstr = data.replace("![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?", "informacionFactura");
-    console.log(newstr);
-/*    newstr = '<?xml version="1.0" encoding="UTF-8" ?>\n' +
-      '            <user id="1">\n' +
-      '                <name>John Doe</name>\n' +
-      '                <email>john.doe@example.com</email>\n' +
-      '                <roles>\n' +
-      '                    <role>Member</role>\n' +
-      '                    <role>Admin</role>\n' +
-      '                </roles>\n' +
-      '                <admin>true</admin>\n' +
-      '            </user>';*/
-    // @ts-ignore
-    const parser = new xml2js.parseString(newstr, (err, result) => {
-      if(err) {
-        throw err;
-      }
-
-      // `result` is a JavaScript object
-      // convert it to a JSON string
-      const json = JSON.stringify(result, null, 4);
-
-      // log JSON string
-      console.log(json);
-
-    });
-
-
-    const parseXml = this.parseXml(data);
+    const parseXml = this.parseXml(newstr);
     const obj = this.xmlToJson(parseXml);
     // @ts-ignore
     if (!obj && !obj.root && !obj.root.entidad && !obj.root.entidad.row) {

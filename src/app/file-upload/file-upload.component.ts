@@ -1,5 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {FileUploadService} from "./service/file-upload.service";
+import {FacturaElectronica} from "./entidad-factura/FacturaElectronica";
+import {DeclaracionFactura} from "./entidad-factura/DeclaracionFactura";
 
 @Component({
   selector: 'app-file-upload',
@@ -29,17 +31,30 @@ export class FileUploadComponent implements OnInit {
     }
   }
 
-  private obtenerInformacionArchivo(data: { files: File }) {
-    const promesa = new Promise(async (resolve, reject) => {
+  private simplificaObjeto(facturaElectronica: FacturaElectronica): DeclaracionFactura {
+    const secuencial = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.secuencial;
+    const ruc = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ruc;
+    const puntoEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ptoEmi;
+    const establecimiento = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.estab;
+
+    const objDeclacion: DeclaracionFactura = new DeclaracionFactura(secuencial, ruc)
+    return null;
+  }
+
+  private async obtenerInformacionArchivo(data: { files: File }) {
+    const objFactura: FacturaElectronica = await this.fileService.procesaXml(data) as FacturaElectronica;
+    console.log(objFactura);
+    /*const promesa = new Promise(async (resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = (e) => {
-        const obj = this.fileService.entidadDesdeXML(reader.result);
-        console.log(obj);
+        const obj = this.fileService.entidadDesdeXML(reader.result) as FacturaElectronica;
+        console.log(obj.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ambiente["#text"])
+        window.alert(obj.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ambiente["#text"]);
       };
       // @ts-ignore
       reader.readAsText(data);
     });
-    return promesa;
+    return promesa;*/
   }
 
 
