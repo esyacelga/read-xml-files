@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {FileUploadService} from "./service/file-upload.service";
 import {FacturaElectronica} from "./entidad-factura/FacturaElectronica";
 import {DeclaracionFactura} from "./entidad-factura/DeclaracionFactura";
+import {TotalImpuesto} from "./entidad-factura/TotalImpuesto";
 
 @Component({
   selector: 'app-file-upload',
@@ -19,6 +20,9 @@ export class FileUploadComponent implements OnInit {
   // @ts-ignore
   cols: any[];
 
+  // @ts-ignore
+  compobantes = [];
+
   constructor(public fileService: FileUploadService) {
   }
 
@@ -27,10 +31,10 @@ export class FileUploadComponent implements OnInit {
       {field: 'secuencial', header: 'secuencial', customExportHeader: 'secuencial'},
       {field: 'rucProveedor', header: 'Name'},
       {field: 'noFactura', header: 'noFactura'},
-      {field: 'dia', header: 'Dia'},
-      {field: 'mes', header: 'Mes'},
-      {field: 'anio', header: 'Anio'},
+      {field: 'fechaEmision', header: 'Fecha Emision'},
       {field: 'ivaSolicitado', header: 'Iva solicitado'}
+
+
     ];
   }
 
@@ -57,13 +61,26 @@ export class FileUploadComponent implements OnInit {
     }
   }
 
+  // @ts-ignore
+  private stringToDate(_date, _format, _delimiter) {
+    var formatLowerCase = _format.toLowerCase();
+    var formatItems = formatLowerCase.split(_delimiter);
+    var dateItems = _date.split(_delimiter);
+    var monthIndex = formatItems.indexOf("mm");
+    var dayIndex = formatItems.indexOf("dd");
+    var yearIndex = formatItems.indexOf("yyyy");
+    var month = parseInt(dateItems[monthIndex]);
+    month -= 1;
+    var formatedDate = new Date(dateItems[yearIndex], month, dateItems[dayIndex]);
+    return formatedDate;
+  }
+
   private async procesarArchivos() {
-    // @ts-ignore
-    this.compobantes = [];
+
     // @ts-ignore
     for (var i = 0; i < this.files.length; i++) {
       // @ts-ignore
-      const objDec: DeclaracionFactura = await this.obtenerInformacionArchivo(this.files[i]) as DeclaracionFactura;
+      const objDec: DeclaracionFactura = await this.obtenerInformacionArchivo(this.files[i], i.toString()) as DeclaracionFactura;
       var filtroNumero = this.compobantes.find((t: DeclaracionFactura) => t.noFactura == objDec.noFactura);
       var filtroRuc = this.compobantes.find((t: DeclaracionFactura) => t.rucProveedor == objDec.rucProveedor);
       if (filtroNumero && filtroRuc)
@@ -75,22 +92,59 @@ export class FileUploadComponent implements OnInit {
     }
   }
 
-  private simplificaObjeto(facturaElectronica: FacturaElectronica): DeclaracionFactura {
-    const secuencial = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.secuencial["#text"];
-    const ruc = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ruc["#text"];
-    const puntoEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ptoEmi["#text"];
-    const establecimiento = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.estab["#text"];
-    const numeroFactura = establecimiento + '-' + puntoEmision + '-' + secuencial;
-    const fechaEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoFactura.fechaEmision["#text"];
+  private simplificaObjeto(facturaElectronica: FacturaElectronica, sec: string): DeclaracionFactura {
+    let secuencial = "";
+    let secuencialFactura = "";
+    let ruc = "";
+    let puntoEmision = "";
+    let establecimiento = "";
+    let fechaEmision = "";
+    let ivaSolicitado = "";
+    if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura) {
+      if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoFactura.totalConImpuestos.totalImpuesto.valor)
+        ivaSolicitado = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoFactura.totalConImpuestos.totalImpuesto.valor["#text"];
+      else
+        ivaSolicitado = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoFactura.totalConImpuestos.totalImpuesto["1"].valor["#text"];
+    } else {
+      const data: TotalImpuesto = facturaElectronica.autorizacion.comprobante.informacionFactura.infoFactura.totalConImpuestos.totalImpuesto;
+      if (data.valor)
+        ivaSolicitado = data.valor["#text"];
+      else
+        ivaSolicitado = data["1"].valor["#text"];
+    }
+    secuencial = sec;
+
+    if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura)
+      secuencialFactura = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.secuencial["#text"];
+    else
+      secuencialFactura = facturaElectronica.autorizacion.comprobante.informacionFactura.infoTributaria.secuencial["#text"];
+
+    if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura)
+      ruc = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ruc["#text"];
+    else
+      ruc = facturaElectronica.autorizacion.comprobante.informacionFactura.infoTributaria.ruc["#text"];
+    if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura)
+      puntoEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.ptoEmi["#text"];
+    else
+      puntoEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.infoTributaria.ptoEmi["#text"];
+    if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura)
+      establecimiento = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoTributaria.estab["#text"];
+    else
+      establecimiento = facturaElectronica.autorizacion.comprobante.informacionFactura.infoTributaria.estab["#text"];
+
+    const numeroFactura = establecimiento + '-' + puntoEmision + '-' + secuencialFactura;
+    if (facturaElectronica.autorizacion.comprobante.informacionFactura.factura)
+      fechaEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoFactura.fechaEmision["#text"];
+    else
+      fechaEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.infoFactura.fechaEmision["#text"];
     const emisionDate = new Date(fechaEmision);
-    const ivaSolicitado = facturaElectronica.autorizacion.comprobante.informacionFactura.factura.infoFactura.totalConImpuestos.totalImpuesto.valor["#text"];
-    const objDeclacion: DeclaracionFactura = new DeclaracionFactura(secuencial, ruc, numeroFactura, emisionDate.getDay(), emisionDate.getMonth(), emisionDate.getFullYear(), ivaSolicitado);
+    const objDeclacion: DeclaracionFactura = new DeclaracionFactura(secuencial, ruc, numeroFactura, emisionDate.getDay(), emisionDate.getMonth(), emisionDate.getFullYear(), ivaSolicitado, fechaEmision);
     return objDeclacion;
   }
 
-  private async obtenerInformacionArchivo(data: any) {
+  private async obtenerInformacionArchivo(data: any, secuencial: string) {
     const objFactura: FacturaElectronica = await this.fileService.procesaXml(data) as FacturaElectronica;
-    const objDec: DeclaracionFactura = this.simplificaObjeto(objFactura);
+    const objDec: DeclaracionFactura = this.simplificaObjeto(objFactura, secuencial);
     return objDec;
 
   }
