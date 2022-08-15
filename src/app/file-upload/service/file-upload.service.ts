@@ -29,6 +29,7 @@ export class FileUploadService {
       return null;
     }
     var newstr = data.replace("![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?", "informacionFactura");
+    newstr = newstr.replace("![CDATA[<factura xmlns:ns2=\"http://www.w3.org/2000/09/xmldsig#\" id=\"comprobante\" version=\"2.1.0\"", "informacionFactura");
     const parseXml = this.parseXml(newstr);
     const obj = this.xmlToJson(parseXml);
     // @ts-ignore

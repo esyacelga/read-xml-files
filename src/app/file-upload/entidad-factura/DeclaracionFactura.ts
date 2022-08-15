@@ -1,13 +1,13 @@
 export class DeclaracionFactura {
-  secuencial: number;
+  secuencial: string;
   rucProveedor: string;
   noFactura: string;
   dia: number;
   mes: number;
   anio: number;
-  ivaSolicitado: number;
+  ivaSolicitado: string;
 
-  constructor(secuencial: number, rucProveedor: string, noFactura: string, dia: number, mes: number, anio: number, ivaSolicitado: number) {
+  constructor(secuencial: string, rucProveedor: string, noFactura: string, dia: number, mes: number, anio: number, ivaSolicitado: string) {
     this.secuencial = secuencial;
     this.rucProveedor = rucProveedor;
     this.noFactura = noFactura;
