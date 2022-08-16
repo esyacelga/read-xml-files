@@ -3,6 +3,8 @@ import {FileUploadService} from "./service/file-upload.service";
 import {FacturaElectronica} from "./entidad-factura/FacturaElectronica";
 import {DeclaracionFactura} from "./entidad-factura/DeclaracionFactura";
 import {TotalImpuesto} from "./entidad-factura/TotalImpuesto";
+// @ts-ignore
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-file-upload',
@@ -76,11 +78,10 @@ export class FileUploadComponent implements OnInit {
   }
 
   private async procesarArchivos() {
-
     // @ts-ignore
     for (var i = 0; i < this.files.length; i++) {
       // @ts-ignore
-      const objDec: DeclaracionFactura = await this.obtenerInformacionArchivo(this.files[i], i.toString()) as DeclaracionFactura;
+      const objDec: DeclaracionFactura = await this.obtenerInformacionArchivo(this.files[i], (i + 1).toString()) as DeclaracionFactura;
       var filtroNumero = this.compobantes.find((t: DeclaracionFactura) => t.noFactura == objDec.noFactura);
       var filtroRuc = this.compobantes.find((t: DeclaracionFactura) => t.rucProveedor == objDec.rucProveedor);
       if (filtroNumero && filtroRuc)
@@ -90,6 +91,25 @@ export class FileUploadComponent implements OnInit {
         this.compobantes.push(objDec);
       }
     }
+  }
+
+  exportExcel() {
+    // @ts-ignore
+    import("xlsx").then(xlsx => {
+      const worksheet = xlsx.utils.json_to_sheet(this.compobantes);
+      const workbook = {Sheets: {'data': worksheet}, SheetNames: ['data']};
+      const excelBuffer: any = xlsx.write(workbook, {bookType: 'xlsx', type: 'array'});
+      this.saveAsExcelFile(excelBuffer, "products");
+    });
+  }
+
+  saveAsExcelFile(buffer: any, fileName: string): void {
+    let EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
+    let EXCEL_EXTENSION = '.xlsx';
+    const data: Blob = new Blob([buffer], {
+      type: EXCEL_TYPE
+    });
+    FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
   }
 
   private simplificaObjeto(facturaElectronica: FacturaElectronica, sec: string): DeclaracionFactura {
@@ -138,7 +158,7 @@ export class FileUploadComponent implements OnInit {
     else
       fechaEmision = facturaElectronica.autorizacion.comprobante.informacionFactura.infoFactura.fechaEmision["#text"];
     const emisionDate = new Date(fechaEmision);
-    const objDeclacion: DeclaracionFactura = new DeclaracionFactura(secuencial, ruc, numeroFactura, emisionDate.getDay(), emisionDate.getMonth(), emisionDate.getFullYear(), ivaSolicitado, fechaEmision);
+    const objDeclacion: DeclaracionFactura = new DeclaracionFactura(secuencial, ruc, numeroFactura, ivaSolicitado, fechaEmision);
     return objDeclacion;
   }
 
